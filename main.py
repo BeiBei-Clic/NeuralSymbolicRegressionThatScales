@@ -4,6 +4,15 @@ import pandas as pd
 import numpy as np
 import torch
 import json
+import warnings
+
+# 过滤掉常见的警告信息
+warnings.filterwarnings("ignore", message="To copy construct from a tensor")
+warnings.filterwarnings("ignore", message="Support for mismatched key_padding_mask and attn_mask is deprecated")
+warnings.filterwarnings("ignore", category=UserWarning, module="torch")
+warnings.filterwarnings("ignore", message="You have multiple `ModelCheckpoint` callback states")
+warnings.filterwarnings("ignore", message="Lightning automatically upgraded your loaded checkpoint")
+warnings.filterwarnings("ignore", category=UserWarning, module="pytorch_lightning")
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
@@ -15,7 +24,7 @@ from functools import partial
 from sympy import lambdify
 import omegaconf
 
-def load_feynman_dataset(dataset_name, num_samples=10, train_ratio=0.8, random_seed=0):
+def load_feynman_dataset(dataset_name, num_samples=1000, train_ratio=0.8, random_seed=0):
     """
     从Feynman_with_units目录加载指定的数据集，并进行标准化
     

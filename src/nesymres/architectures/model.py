@@ -133,11 +133,17 @@ class Model(pl.LightningModule):
         X = X
         y = y[:,None]
         
-        X = torch.tensor(X,device=self.device).unsqueeze(0)
+        if isinstance(X, torch.Tensor):
+            X = X.detach().clone().to(self.device).unsqueeze(0)
+        else:
+            X = torch.tensor(X, device=self.device).unsqueeze(0)
         if X.shape[2] < self.cfg.dim_input - 1:
             pad = torch.zeros(1, X.shape[1],self.cfg.dim_input-X.shape[2]-1, device=self.device)
             X = torch.cat((X,pad),dim=2)
-        y = torch.tensor(y,device=self.device).unsqueeze(0)
+        if isinstance(y, torch.Tensor):
+            y = y.detach().clone().to(self.device).unsqueeze(0)
+        else:
+            y = torch.tensor(y, device=self.device).unsqueeze(0)
         with torch.no_grad():
 
             encoder_input = torch.cat((X, y), dim=2) #.permute(0, 2, 1)
@@ -147,11 +153,11 @@ class Model(pl.LightningModule):
             src_enc = enc_src
             shape_enc_src = (cfg_params.beam_size,) + src_enc.shape[1:]
             enc_src = src_enc.unsqueeze(1).expand((1, cfg_params.beam_size) + src_enc.shape[1:]).contiguous().view(shape_enc_src)
-            print(
-                "Memory footprint of the encoder: {}GB \n".format(
-                    enc_src.element_size() * enc_src.nelement() / 10 ** (9)
-                )
-            )
+            # print(
+            #     "Memory footprint of the encoder: {}GB \n".format(
+            #         enc_src.element_size() * enc_src.nelement() / 10 ** (9)
+            #     )
+            # )
             assert enc_src.size(0) == cfg_params.beam_size
             generated = torch.zeros(
                 [cfg_params.beam_size, self.cfg.length_eq],

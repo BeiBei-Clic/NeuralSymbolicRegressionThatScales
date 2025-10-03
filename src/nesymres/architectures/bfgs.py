@@ -88,10 +88,10 @@ def bfgs(pred_str, X, y, cfg):
 
 
     
-    print('Constructing BFGS loss...')
+    # print('Constructing BFGS loss...')
 
     if cfg.bfgs.idx_remove:
-        print('Flag idx remove ON, Removing indeces with high values...')
+        # print('Flag idx remove ON, Removing indeces with high values...')
         bool_con = (X<200).all(axis=2).squeeze() 
         X = X[:,bool_con,:]
         # idx_leave = np.where((np.abs(input_batch[:,3].numpy()))<200)[0]
@@ -100,7 +100,7 @@ def bfgs(pred_str, X, y, cfg):
 
 
     max_y = np.max(np.abs(torch.abs(y).cpu().numpy()))
-    print('checking input values range...')
+    # print('checking input values range...')
     if max_y > 300:
         print('Attention, input values are very large. Optimization may fail due to numerical issues')
 
@@ -129,7 +129,7 @@ def bfgs(pred_str, X, y, cfg):
     else:
         raise KeyError
     
-    print('Loss constructed, starting new BFGS optmization...') 
+    # print('Loss constructed, starting new BFGS optmization...') 
 
     # Lists where all restarted will be appended
     F_loss = []
