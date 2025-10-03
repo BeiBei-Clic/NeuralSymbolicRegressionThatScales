@@ -114,14 +114,14 @@ def save_experiment_results(dataset_name, results, results_dir):
     json_results = {}
     for percentile, data in results.items():
         # 处理无穷大值
-        test_mse = data['test_mse']
-        if test_mse == float('inf'):
-            test_mse = "Infinity"
-        elif test_mse == float('-inf'):
-            test_mse = "-Infinity"
+        test_rmse = data['test_rmse']
+        if test_rmse == float('inf'):
+            test_rmse = "Infinity"
+        elif test_rmse == float('-inf'):
+            test_rmse = "-Infinity"
         else:
             # 确保是Python原生float类型
-            test_mse = float(test_mse)
+            test_rmse = float(test_rmse)
         
         # 确保适应度历史中的所有值都是Python原生float类型
         fitness_history = []
@@ -130,7 +130,7 @@ def save_experiment_results(dataset_name, results, results_dir):
         
         json_results[percentile] = {
             'seed': int(data['seed']),  # 确保是Python原生int类型
-            'test_mse': test_mse,
+            'test_rmse': test_rmse,
             'best_equation': str(data['best_equation']) if data['best_equation'] else None,
             'fitness_history': fitness_history
         }
@@ -161,7 +161,6 @@ def run_single_experiment(dataset_name, seed, fitfunc):
     output = fitfunc(X_train, y_train)
     
     # 计算测试集MSE
-    test_mse = float('inf')
     best_equation = None
     fitness_history = []
     
@@ -211,9 +210,9 @@ def run_single_experiment(dataset_name, seed, fitfunc):
             
             # 确保预测结果是有限的
             if np.isfinite(y_pred).all():
-                test_mse = np.mean((y_test_np - y_pred) ** 2)
+                test_rmse = np.sqrt(np.mean((y_test_np - y_pred) ** 2))
             else:
-                test_mse = float('inf')
+                test_rmse = float('inf')
                 
         except Exception as e:
             # 如果解析或预测失败，保持MSE为无穷大
@@ -227,14 +226,14 @@ def run_single_experiment(dataset_name, seed, fitfunc):
         fitness_history = [float(output['best_bfgs_loss'][0])]
     
     # 显示结果
-    if test_mse == float('inf'):
-        print("MSE = inf")
+    if test_rmse == float('inf'):
+        print("RMSE = inf")
     else:
-        print(f"MSE = {test_mse:.6f}")
+        print(f"RMSE = {test_rmse:.6f}")
     
     return {
         'seed': seed,
-        'test_mse': test_mse,
+        'test_rmse': test_rmse,
         'best_equation': best_equation,
         'fitness_history': fitness_history
     }
@@ -302,8 +301,8 @@ if __name__ == "__main__":
             experiment_result = run_single_experiment(dataset_name, seed, fitfunc)
             all_experiments.append(experiment_result)
         
-        # 按测试集MSE排序
-        all_experiments.sort(key=lambda x: x['test_mse'])
+        # 按测试集RMSE排序
+        all_experiments.sort(key=lambda x: x['test_rmse'])
         
         # 计算分位数索引
         n_experiments = len(all_experiments)
@@ -320,9 +319,9 @@ if __name__ == "__main__":
         
         # 打印选择的结果
         print(f"\n数据集 {dataset_name} 的选择结果:")
-        print(f"0.25分位数 (种子{selected_results['percentile_25']['seed']}): MSE = {selected_results['percentile_25']['test_mse']:.6f}")
-        print(f"0.50分位数 (种子{selected_results['percentile_50']['seed']}): MSE = {selected_results['percentile_50']['test_mse']:.6f}")
-        print(f"0.75分位数 (种子{selected_results['percentile_75']['seed']}): MSE = {selected_results['percentile_75']['test_mse']:.6f}")
+        print(f"0.25分位数 (种子{selected_results['percentile_25']['seed']}): RMSE = {selected_results['percentile_25']['test_rmse']:.6f}")
+        print(f"0.50分位数 (种子{selected_results['percentile_50']['seed']}): RMSE = {selected_results['percentile_50']['test_rmse']:.6f}")
+        print(f"0.75分位数 (种子{selected_results['percentile_75']['seed']}): RMSE = {selected_results['percentile_75']['test_rmse']:.6f}")
         
         # 保存结果
         save_experiment_results(dataset_name, selected_results, results_dir)
