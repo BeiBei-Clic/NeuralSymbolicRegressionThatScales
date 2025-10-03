@@ -10,12 +10,44 @@ ICML 2021 论文“Neural Symbolic Regression That Scales”的 Pytorch 实现�
 请通过以下方式克隆并安装此存储库：
 
 ```
-git clone https://github.com/SymposiumOrganization/NeuralSymbolicRegressionThatScales.git
-cd NeuralSymbolicRegressionThatScales/
-pip3 install -e src/
+git clone https://github.com/xyh1999/NeuralSymbolicRegressionThatScales.git
+cd NeuralSymbolicRegressionThatScales
+pip install -r requirements.txt
 ```
-
 此库需要 python>3.7
+
+## 费曼数据集上的工作
+
+我们正在将此项目应用于费曼数据集（Feynman Dataset），这是一个包含物理方程的数据集，旨在测试符号回归模型的泛化能力。
+
+您可以在这里找到费曼数据集：[https://space.mit.edu/home/tegmark/aifeynman.html](https://space.mit.edu/home/tegmark/aifeynman.html)
+
+`main.py` 文件是项目在费曼数据集上进行符号回归实验的核心脚本。它主要负责以下几个方面：
+
+1.  **数据加载与预处理**：
+    *   `load_feynman_dataset` 函数负责从 `dataset/Feynman_with_units` 目录加载指定的费曼数据集。
+    *   它会根据配置的样本数量读取数据，并进行随机打乱。
+    *   数据被划分为输入特征和目标值，并进一步分割为训练集和测试集。
+    *   **关键步骤**：对输入特征和目标值进行**标准化**处理，这对于模型的稳定训练和泛化能力至关重要。
+    *   最终，处理后的数据以 PyTorch 张量的形式返回，同时返回标准化参数以便后续反标准化。
+
+2.  **单次实验运行**：
+    *   `run_single_experiment` 函数执行单个数据集在特定随机种子下的完整实验流程。
+    *   它首先调用 `load_feynman_dataset` 获取预处理数据。
+    *   如果检测到 GPU，数据会被自动移动到 GPU 上进行加速计算。
+    *   核心的符号回归拟合过程由 `fitfunc`（一个封装了模型推理逻辑的函数）完成。
+    *   模型生成预测方程后，脚本会利用 `sympy` 库解析该方程，并将其转换为可执行的 Python 函数。
+    *   随后，该函数在**测试集**上进行预测，并计算预测结果与真实值之间的**均方误差 (MSE)**，以此来量化模型的泛化性能。
+    *   实验过程中还会记录模型的适应度历史（通常是训练损失）。
+
+3.  **批量实验与结果分析**：
+    *   `main.py` 的主执行块定义了一系列要进行实验的费曼数据集名称。
+    *   为了确保结果的鲁棒性，每个数据集都会在多个随机种子下（默认为 10 个种子）独立运行实验。
+    *   所有实验结果（包括每个种子的测试 MSE、最佳方程等）都会被收集。
+    *   为了全面评估模型性能，脚本会根据测试 MSE 对所有实验结果进行排序，并提取 25%、50%（中位数）和 75% 分位数的实验结果。
+    *   最后，`save_experiment_results` 函数将这些关键分位数的实验结果保存为 JSON 文件，便于后续的数据分析和报告。
+
+通过上述流程，`main.py` 文件提供了一个系统化的框架，用于在费曼数据集上评估和分析符号回归模型的性能。
 
 
 
